@@ -35,6 +35,25 @@ function argsOf(argv: string[]): Record<string, string | boolean> {
   return out;
 }
 
+/** Load .env from the repo root and the cwd. Real environment always wins: this never overrides. */
+function loadDotEnv(): void {
+  for (const file of [join(ROOT, '.env'), join(process.cwd(), '.env')]) {
+    if (!existsSync(file)) continue;
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq < 0) continue;
+      const key = trimmed.slice(0, eq).trim().replace(/^export\s+/, '');
+      let value = trimmed.slice(eq + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (key !== '' && process.env[key] === undefined) process.env[key] = value;
+    }
+  }
+}
+
 function json(value: unknown): void { process.stdout.write(`${JSON.stringify(value, null, 2)}\n`); }
 
 function requestFrom(args: Record<string, string | boolean>): RouteRequest {
@@ -144,6 +163,7 @@ async function doctor(): Promise<number> {
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
   const args = argsOf(rest);
+  loadDotEnv();
   switch (command) {
     case 'providers': {
       const registry = loadRegistry(REGISTRY);
@@ -204,6 +224,22 @@ async function main(): Promise<void> {
         console.log(`\n${tools.length} tools from ${target}`);
       }
       client.close();
+      break;
+    }
+    case 'env': {
+      // prints which credential names are present, never their values
+      const envFile = join(ROOT, '.env');
+      console.log(`env file: ${existsSync(envFile) ? envFile : 'none — copy .env.example to .env'}`);
+      const registry = loadRegistry(REGISTRY);
+      let present = 0;
+      for (const p of registry.providers) {
+        const key = p.auth.key_env;
+        if (!key) { console.log(`  ○ ${p.id.padEnd(16)} (no credential needed)`); continue; }
+        const have = (process.env[key] ?? '') !== '';
+        if (have) present++;
+        console.log(`${have ? '●' : '○'} ${p.id.padEnd(16)} ${key}`);
+      }
+      console.log(`\n${present} credential(s) present. The local tier needs none.`);
       break;
     }
     case 'memory': {

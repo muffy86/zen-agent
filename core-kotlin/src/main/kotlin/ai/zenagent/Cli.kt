@@ -149,7 +149,33 @@ private fun doctor(): Int {
     return 0
 }
 
+/**
+ * Load .env from the repo root as a fallback for credentials. Real environment variables always win,
+ * and this never overrides them — a key exported in the shell is never shadowed by a file.
+ */
+private fun loadDotEnv() {
+    val file = java.nio.file.Paths.get(Paths2.repoRoot().toString(), ".env")
+    if (!Files.exists(file)) return
+    for (line in Files.readAllLines(file)) {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith("#") || !trimmed.contains("=")) continue
+        val key = trimmed.substringBefore("=").trim().removePrefix("export").trim()
+        val value = trimmed.substringAfter("=").trim().trim('"').trim('\'')
+        if (key.isNotEmpty() && System.getenv(key) == null) {
+            // ProcessBuilder cannot mutate its own environment: record it in a side map the readers consult
+            DotEnv.values[key] = value
+        }
+    }
+}
+
+/** Values from .env, consulted only when the real environment has nothing. */
+object DotEnv {
+    val values = LinkedHashMap<String, String>()
+    fun get(name: String?): String? = name?.let { System.getenv(it) ?: values[it] }
+}
+
 fun main(args: Array<String>) {
+    loadDotEnv()
     val command = args.firstOrNull() ?: "help"
     val rest = args.drop(1)
     val providers = if (command == "help") emptyList() else Registry.load()
@@ -184,7 +210,7 @@ fun main(args: Array<String>) {
         }
         "live" -> {
             val decision = Router.route(providers, requestFrom(rest))
-            val apiKey = decision.authKeyEnv?.let { System.getenv(it) }
+            val apiKey = DotEnv.get(decision.authKeyEnv)
             val outcome = Agent.runLiveLoop(
                 decision,
                 flag(rest, "prompt") ?: "reply with exactly: ZEN_OK",
@@ -218,6 +244,19 @@ fun main(args: Array<String>) {
                     println("\n${tools.size} tools from $target")
                 }
             }
+        }
+        "env" -> {
+            val file = java.nio.file.Paths.get(Paths2.repoRoot().toString(), ".env")
+            println("env file: " + (if (Files.exists(file)) file else "none - copy .env.example to .env"))
+            var present = 0
+            for (provider in providers) {
+                val key = provider.auth.keyEnv
+                if (key == null) { println("  - ${provider.id.padEnd(16)} (no credential needed)"); continue }
+                val have = DotEnv.get(key)?.isNotEmpty() == true
+                if (have) present++
+                println("${if (have) "●" else "○"} ${provider.id.padEnd(16)} $key")
+            }
+            println("\n$present credential(s) present. The local tier needs none.")
         }
         "memory" -> {
             val hits = MemoryStore(Paths2.repoRoot().resolve("memory").resolve("memory.jsonl")).recall(flag(rest, "query") ?: "")

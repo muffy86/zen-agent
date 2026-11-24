@@ -21,6 +21,24 @@ def _fixtures() -> Path:
     return repo_root() / "protocol" / "fixtures"
 
 
+def load_dotenv() -> None:
+    """Load .env from the repo root and the cwd. Real environment always wins: this never overrides."""
+    import os
+
+    for path in (repo_root() / ".env", Path.cwd() / ".env"):
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip().removeprefix("export").strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
 def conformance() -> int:
     registry = load_registry()
     rules = load_rules()
@@ -98,6 +116,7 @@ def main(argv: List[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("providers")
+    sub.add_parser("env")
     route_parser = sub.add_parser("route")
     route_parser.add_argument("--capability")
     route_parser.add_argument("--prompt")
@@ -138,8 +157,25 @@ def main(argv: List[str] | None = None) -> int:
     sub.add_parser("doctor")
     sub.add_parser("selftest")
     args = parser.parse_args(argv)
+    load_dotenv()
 
     from .router import infer_capability
+
+    if args.command == "env":
+        registry = load_registry()
+        env_file = repo_root() / ".env"
+        print(f"env file: {env_file if env_file.exists() else 'none - copy .env.example to .env'}")
+        present = 0
+        for provider in registry["providers"]:
+            key = provider["auth"].get("key_env")
+            if not key:
+                print(f"  - {provider['id']:<16} (no credential needed)")
+                continue
+            have = bool(os.environ.get(key))
+            present += 1 if have else 0
+            print(f"{'*' if have else 'o'} {provider['id']:<16} {key}")
+        print(f"\n{present} credential(s) present. The local tier needs none.")
+        return 0
 
     if args.command == "providers":
         registry = load_registry()

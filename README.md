@@ -41,7 +41,7 @@ vectors but were run live against the device gateway, on all three heads.
 | The agentic loop really calls a tool | live run, all three heads: prompt `compute 21*2 with calc` → tool `calc` → result `42` → final `42` |
 | The gate really refuses things | `policy/p04`: `/etc/passwd` → `DENIED:path_outside_write_root`; `p08`: injection text → `injection_suspected`; `p09`: `shell.exec` → `tool_not_enabled` |
 | Provider catalogs are real, not guessed | Zen: **108 model ids** fetched live; clawrouter: 22; Ollama: 13 installed models |
-| Zen inference needs a credential | live probe: `POST opencode.ai/zen/v1/chat/completions` without a key → **429 FreeUsageLimitError** |
+| Zen inference needs *entitlement*, not just a key | live probe: `POST opencode.ai/zen/v1/chat/completions` → **429 FreeUsageLimitError**, and the identical response comes back with a dummy key in place. The free lane is for the OpenCode client; a third-party client needs **OpenCode Go** or Console credits |
 | The MCP component reaches the device's real tool bus | all three heads list **19 device tools** (`/mcp` on 8802) and **23 browser tools** (8801), and each called `device_capabilities` successfully |
 | Artifacts install clean | wheel in a fresh venv: **32/32 vectors**; tarball in a fresh npm dir: works; fat jar: standalone |
 
