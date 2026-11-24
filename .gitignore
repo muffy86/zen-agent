@@ -23,3 +23,5 @@ out/
 id_*
 .pytest_cache/
 .kotlin/
+__pycache__/
+*.pyc
