@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zen-agent/protocol/schema/routing-decision.schema.json",
+  "title": "zen-agent routing decision (protocol v1)",
+  "type": "object",
+  "required": ["status", "capability", "provider", "fallbacks", "error_code"],
+  "properties": {
+    "status": { "enum": ["ok", "error"] },
+    "route_id": { "type": ["string", "null"], "pattern": "^rt-[a-z]+-[a-z0-9-]+$" },
+    "capability": { "type": "string" },
+    "provider": { "type": ["string", "null"] },
+    "model": { "type": ["string", "null"] },
+    "endpoint": { "type": ["string", "null"] },
+    "kind": {
+      "type": ["string", "null"],
+      "enum": ["openai-compatible", "anthropic", "google", "ollama-native", "bedrock", "vertex", null]
+    },
+    "tier": { "type": ["string", "null"], "enum": ["local", "free", "paid", null] },
+    "auth_style": { "type": ["string", "null"] },
+    "auth_key_env": { "type": ["string", "null"] },
+    "key_required": { "type": ["boolean", "null"] },
+    "prefer": { "enum": ["balanced", "local", "quality"] },
+    "fallbacks": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["provider", "model"],
+        "properties": { "provider": { "type": "string" }, "model": { "type": "string" } }
+      }
+    },
+    "reason": { "type": ["string", "null"] },
+    "error_code": { "type": ["string", "null"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "error" } }, "required": ["status"] },
+      "then": { "properties": { "error_code": { "type": "string" }, "provider": { "type": "null" } } }
+    }
+  ]
+}

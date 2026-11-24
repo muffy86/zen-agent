@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "name": "tool-loop golden vectors",
+  "contract": "protocol/agent-protocol.md#6-#7",
+  "semantics": {
+    "calc": "integer arithmetic only (+ - * / and parentheses), division truncates toward zero, result returned as a canonical decimal string",
+    "fs.read": "file content with trailing whitespace stripped",
+    "fs.write": "on allow: 'ok:<normalised path>'; on deny: 'DENIED:<code>' — the file is created only on allow",
+    "text.echo": "the text verbatim",
+    "denial": "a denial is returned to the model as an ordinary tool result and the loop continues"
+  },
+  "cases": [
+    {
+      "id": "t01",
+      "note": "one tool call, then a final answer",
+      "script": [ { "tool_call": { "name": "calc", "args": { "expression": "6*7" } } }, { "final": "the answer is 42" } ],
+      "expect": { "tools": ["calc"], "results": ["42"], "final": "the answer is 42" }
+    },
+    {
+      "id": "t02",
+      "note": "two different tools in one loop, order preserved",
+      "script": [
+        { "tool_call": { "name": "calc", "args": { "expression": "(2+3)*4" } } },
+        { "tool_call": { "name": "fs.read", "args": { "path": "protocol/fixtures/files/sample.txt" } } },
+        { "final": "done" }
+      ],
+      "expect": { "tools": ["calc", "fs.read"], "results": ["20", "zen-agent sample fixture"], "final": "done" }
+    },
+    {
+      "id": "t03",
+      "note": "echo passes text through unchanged",
+      "script": [ { "tool_call": { "name": "text.echo", "args": { "text": "hello agent" } } }, { "final": "echoed" } ],
+      "expect": { "tools": ["text.echo"], "results": ["hello agent"], "final": "echoed" }
+    },
+    {
+      "id": "t04",
+      "note": "denied write is data, not an exception: the loop keeps going",
+      "script": [ { "tool_call": { "name": "fs.write", "args": { "path": "/etc/zen-agent", "content": "x" } } }, { "final": "refused, nothing written" } ],
+      "expect": { "tools": ["fs.write"], "results": ["DENIED:path_outside_write_root"], "final": "refused, nothing written" }
+    },
+    {
+      "id": "t05",
+      "note": "allowed write inside the sandbox root",
+      "script": [ { "tool_call": { "name": "fs.write", "args": { "path": "out/loop.txt", "content": "written by the loop" } } }, { "final": "wrote it" } ],
+      "expect": { "tools": ["fs.write"], "results": ["ok:out/loop.txt"], "final": "wrote it" }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@muffy86/zen-agent",
+  "version": "1.0.0",
+  "description": "Polyglot agentic runtime: one provider registry, one policy gate, three first-class implementations (TypeScript, Python, Kotlin) proven equal by shared golden vectors.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=18.0.0" },
+  "bin": { "zen-agent": "dist/cli.js" },
+  "main": "dist/router.js",
+  "exports": { ".": "./dist/cli.js", "./router": "./dist/router.js", "./policy": "./dist/policy.js" },
+  "files": ["dist", "USAGE.txt"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/",
+    "conformance": "node dist/cli.js conformance",
+    "doctor": "node dist/cli.js doctor",
+    "live": "node dist/cli.js live --capability chat --prompt 'reply with exactly: ZEN_OK'"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^22.7.5"
+  },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "repository": { "type": "git", "url": "git+https://github.com/muffy86/zen-agent.git" },
+  "keywords": ["agent", "llm", "router", "mcp", "policy", "opencode-zen", "kotlin", "python"]
+}

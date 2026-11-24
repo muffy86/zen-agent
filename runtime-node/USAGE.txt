@@ -1,0 +1,18 @@
+zen-agent (node runtime) — usage
+
+  zen-agent providers [--json]              list the provider registry with verification marks
+  zen-agent route --capability code         deterministic route for a capability
+            [--prefer local|balanced|quality] [--free-only] [--available clawrouter,ollama]
+            [--env OPENAI_API_KEY] [--prompt "..."] [--tags a,b] [--json]
+  zen-agent infer --prompt "..."            show only the inferred capability
+  zen-agent tool calc --args '{"expression":"6*7"}' [--live]
+  zen-agent loop --script '[{"tool_call":{"name":"calc","args":{"expression":"1+1"}}},{"final":"2"}]'
+  zen-agent memory --query "clawrouter"     recall events from memory/memory.jsonl
+  zen-agent live --capability chat --prompt 'reply with exactly: ZEN_OK'
+  zen-agent conformance                     run all golden vectors, exit 1 on any mismatch
+  zen-agent doctor                          live-probe every provider endpoint
+  zen-agent selftest                        prove the install is alive without calling a model
+
+Environment
+  ZEN_AGENT_ROOT   repo root (default: the directory this CLI is run from)
+  ZEN_AGENT_LIVE=1 enables the live network test in the test suite

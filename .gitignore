@@ -1,0 +1,25 @@
+# build products
+runtime-node/dist/
+runtime-node/node_modules/
+runtime-node/npm-debug.log
+core-kotlin/build/
+core-kotlin/.gradle/
+tools-python/.venv/
+tools-python/build/
+tools-python/*.egg-info/
+dist/
+*.tgz
+
+# runtime state
+memory/memory.jsonl
+out/
+
+# secrets — never in this repo, and never globbed into a "reusable kit" either
+.env
+*.env
+!**/.env.example
+.gh-token
+*.key
+id_*
+.pytest_cache/
+.kotlin/

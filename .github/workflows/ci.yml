@@ -1,0 +1,129 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  contract:
+    name: node head + golden vectors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: install
+        working-directory: runtime-node
+        run: npm install --no-audit --no-fund
+      - name: build
+        working-directory: runtime-node
+        run: npm run build
+      - name: unit + vector tests
+        working-directory: runtime-node
+        run: node --test test/
+      - name: conformance (node)
+        working-directory: runtime-node
+        run: node dist/cli.js conformance
+
+  python:
+    name: python head
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        working-directory: tools-python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: tests
+        working-directory: tools-python
+        run: python -m pytest
+      - name: conformance (python)
+        working-directory: tools-python
+        run: python -m zen_agent.cli conformance
+
+  kotlin:
+    name: kotlin head
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: build + tests + fat jar
+        working-directory: core-kotlin
+        run: ./gradlew --no-daemon build fatJar
+      - name: conformance (kotlin)
+        run: java -jar core-kotlin/build/libs/zen-agent-kotlin-core-1.0.0-all.jar conformance
+
+  differential:
+    name: the three heads must agree
+    needs: [contract, python, kotlin]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: build node
+        working-directory: runtime-node
+        run: npm install --no-audit --no-fund && npm run build
+      - name: build python
+        working-directory: tools-python
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -e .
+      - name: build kotlin
+        working-directory: core-kotlin
+        run: ./gradlew --no-daemon fatJar
+      - name: differential
+        run: python3 scripts/differential.py
+
+  publish:
+    name: publish packages (tag only)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [differential]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: https://npm.pkg.github.com
+      - name: publish npm package to GitHub Packages
+        working-directory: runtime-node
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: build python artifacts
+        working-directory: tools-python
+        run: |
+          pip install build
+          python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zen-agent-dist
+          path: |
+            tools-python/dist/*
+            core-kotlin/build/libs/*-all.jar

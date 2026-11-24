@@ -1,0 +1,789 @@
+{
+  "version": 1,
+  "generated": "2026-11-23",
+  "notes": "Canonical provider registry. 'verified.reachable' means a live HTTP probe succeeded on the date shown; the evidence field records what was actually observed, including 'models list is public but inference is gated', which is not the same claim as working inference.",
+  "providers": [
+    {
+      "id": "clawrouter",
+      "label": "clawrouter v2 (local gateway, 22 models)",
+      "kind": "openai-compatible",
+      "base_url": "http://127.0.0.1:8788/v1",
+      "auth": {
+        "style": "none",
+        "key_required": false,
+        "key_env": null
+      },
+      "tier": "local",
+      "priority": 10,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 (22 ids); POST /v1/chat/completions -> 200 (nvidia/nemotron-3-ultra-550b-a55b:free, cost 0); agentic run: calc tool called, result 42"
+      },
+      "models": {
+        "chat": "auto:chat",
+        "code": "auto:code",
+        "reason": "auto:reason",
+        "vision": "auto:vision",
+        "long": "auto:long",
+        "math": "auto:math",
+        "voice": "auto:voice",
+        "free": "auto:free"
+      }
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama on the device (13 models installed)",
+      "kind": "ollama-native",
+      "base_url": "http://127.0.0.1:11434",
+      "auth": {
+        "style": "none",
+        "key_required": false,
+        "key_env": null
+      },
+      "tier": "local",
+      "priority": 12,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /api/tags -> 200, 13 models incl. huihui_ai/qwen3-abliterated:4b, qwen2.5-coder:1.5b, kimi-k2.7-code:cloud"
+      },
+      "models": {
+        "chat": "huihui_ai/qwen3-abliterated:4b",
+        "code": "qwen2.5-coder:1.5b",
+        "reason": "deepseek-v4.1-flash:cloud",
+        "long": "kimi-k2.7-code:cloud",
+        "math": "glm-5.3-flash:cloud",
+        "free": "huihui_ai/qwen3-abliterated:4b",
+        "embed": "nomic-embed-text:latest"
+      }
+    },
+    {
+      "id": "lmstudio",
+      "label": "LM Studio (OpenAI-compatible local server)",
+      "kind": "openai-compatible",
+      "base_url": "http://127.0.0.1:1234/v1",
+      "auth": {
+        "style": "none",
+        "key_required": false,
+        "key_env": null
+      },
+      "tier": "local",
+      "priority": 14,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "GET 127.0.0.1:1234 -> connection refused; no listener on 1234"
+      },
+      "models": {
+        "chat": "local-model",
+        "code": "local-model",
+        "reason": "local-model"
+      }
+    },
+    {
+      "id": "llama-cpp",
+      "label": "llama.cpp server (GGUF, OpenAI-compatible)",
+      "kind": "openai-compatible",
+      "base_url": "http://127.0.0.1:8080/v1",
+      "auth": {
+        "style": "none",
+        "key_required": false,
+        "key_env": null
+      },
+      "tier": "local",
+      "priority": 16,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200: a server IS listening on 8080 (found by doctor; the earlier registry entry was wrong)"
+      },
+      "models": {
+        "chat": "local-gguf",
+        "free": "local-gguf"
+      }
+    },
+    {
+      "id": "vllm",
+      "label": "vLLM server",
+      "kind": "openai-compatible",
+      "base_url": "http://127.0.0.1:8000/v1",
+      "auth": {
+        "style": "none",
+        "key_required": false,
+        "key_env": null
+      },
+      "tier": "local",
+      "priority": 18,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "GET 127.0.0.1:8000 -> connection refused; no listener on 8000"
+      },
+      "models": {
+        "chat": "vllm-model",
+        "code": "vllm-model",
+        "reason": "vllm-model"
+      }
+    },
+    {
+      "id": "opencode-zen",
+      "label": "OpenCode Zen (108 model ids observed)",
+      "kind": "openai-compatible",
+      "base_url": "https://opencode.ai/zen/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": false,
+        "key_env": "OPENCODE_ZEN_API_KEY"
+      },
+      "tier": "free",
+      "priority": 20,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 (108 ids); POST /v1/chat/completions without a key -> 429 FreeUsageLimitError ('Free usage limit reached') - catalog yes, inference needs a key or OpenCode Go"
+      },
+      "models": {
+        "chat": "big-pickle",
+        "code": "gpt-5.3-codex",
+        "reason": "big-pickle",
+        "vision": "gemini-3.8-flash",
+        "long": "claude-sonnet-5",
+        "math": "gpt-5.5-pro",
+        "free": "deepseek-v4.1-flash-free",
+        "voice": "gpt-live-1.1",
+        "embed": "text-embedding-3-large"
+      }
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "kind": "openai-compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "OPENROUTER_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 30,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "probe from this device: TimeoutError on /v1/models; no key held"
+      },
+      "models": {
+        "chat": "openai/gpt-5.6",
+        "code": "anthropic/claude-sonnet-5",
+        "reason": "deepseek/deepseek-v4-pro",
+        "vision": "google/gemini-3.8-flash",
+        "long": "google/gemini-3.8-flash",
+        "free": "nvidia/nemotron-3-ultra-550b-a55b:free"
+      }
+    },
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "kind": "openai-compatible",
+      "base_url": "https://api.openai.com/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "OPENAI_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 31,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "probe from this device: TimeoutError on /v1/models; no key held"
+      },
+      "models": {
+        "chat": "gpt-5.6-sol",
+        "code": "gpt-5.3-codex",
+        "reason": "gpt-5.5-pro",
+        "vision": "gpt-5.6-sol",
+        "long": "gpt-5.4",
+        "math": "gpt-5.5-pro",
+        "voice": "gpt-realtime"
+      }
+    },
+    {
+      "id": "anthropic",
+      "label": "Anthropic",
+      "kind": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "auth": {
+        "style": "x-api-key",
+        "key_required": true,
+        "key_env": "ANTHROPIC_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 32,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "probe from this device: TimeoutError on /v1/models; no key held"
+      },
+      "models": {
+        "chat": "claude-sonnet-5",
+        "code": "claude-opus-5",
+        "reason": "claude-opus-5",
+        "vision": "claude-sonnet-5",
+        "long": "claude-sonnet-5"
+      }
+    },
+    {
+      "id": "google-gemini",
+      "label": "Google Gemini",
+      "kind": "google",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "auth": {
+        "style": "query-key",
+        "key_required": true,
+        "key_env": "GEMINI_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 33,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "probe from this device: TimeoutError on /v1/models; no key held"
+      },
+      "models": {
+        "chat": "gemini-3.8-flash",
+        "code": "gemini-3.8-flash",
+        "reason": "gemini-4-argon",
+        "vision": "gemini-3.8-flash",
+        "long": "gemini-3.8-flash",
+        "math": "gemini-4-argon",
+        "voice": "gemini-omni-1.2-flash",
+        "embed": "gemini-embedding-2"
+      }
+    },
+    {
+      "id": "xai",
+      "label": "xAI (Grok)",
+      "kind": "openai-compatible",
+      "base_url": "https://api.x.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "XAI_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 36,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "grok-4.7",
+        "code": "grok-build-0.1",
+        "reason": "grok-4.7",
+        "vision": "grok-4.7",
+        "long": "grok-4.7"
+      }
+    },
+    {
+      "id": "deepseek",
+      "label": "DeepSeek",
+      "kind": "openai-compatible",
+      "base_url": "https://api.deepseek.com/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "DEEPSEEK_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 40,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "deepseek-chat",
+        "code": "deepseek-coder",
+        "reason": "deepseek-reasoner",
+        "math": "deepseek-reasoner"
+      }
+    },
+    {
+      "id": "groq",
+      "label": "Groq",
+      "kind": "openai-compatible",
+      "base_url": "https://api.groq.com/openai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "GROQ_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 41,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "llama-4-scout",
+        "code": "qwen3-coder",
+        "reason": "gpt-oss-120b",
+        "free": "llama-4-scout",
+        "voice": "whisper-large-v3"
+      }
+    },
+    {
+      "id": "cerebras",
+      "label": "Cerebras",
+      "kind": "openai-compatible",
+      "base_url": "https://api.cerebras.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "CEREBRAS_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 42,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 403 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "llama-4-maverick",
+        "code": "qwen3-coder-480b",
+        "reason": "gpt-oss-120b",
+        "math": "qwen3-235b"
+      }
+    },
+    {
+      "id": "moonshot-kimi",
+      "label": "Moonshot / Kimi",
+      "kind": "openai-compatible",
+      "base_url": "https://api.moonshot.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "MOONSHOT_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 43,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "kimi-k3",
+        "code": "kimi-k2.7-code",
+        "reason": "kimi-k3.1-pro",
+        "long": "kimi-k3",
+        "vision": "kimi-k3"
+      }
+    },
+    {
+      "id": "zai-glm",
+      "label": "Z.ai (GLM)",
+      "kind": "openai-compatible",
+      "base_url": "https://api.z.ai/api/paas/v4",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "ZAI_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 44,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "glm-5.3",
+        "code": "glm-5.3",
+        "reason": "glm-5.3-prime",
+        "long": "glm-5.3-prime"
+      }
+    },
+    {
+      "id": "minimax",
+      "label": "MiniMax",
+      "kind": "openai-compatible",
+      "base_url": "https://api.minimax.io/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "MINIMAX_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 45,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "minimax-m3",
+        "code": "minimax-m3",
+        "long": "minimax-m3",
+        "voice": "speech-2.6-hd"
+      }
+    },
+    {
+      "id": "nous",
+      "label": "Nous Research",
+      "kind": "openai-compatible",
+      "base_url": "https://inference-api.nousresearch.com/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "NOUS_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 46,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 unauthenticated (model list is public); inference still needs NOUS_API_KEY - catalog reachable is not inference"
+      },
+      "models": {
+        "chat": "hermes-5-405b",
+        "code": "hermes-5-405b",
+        "reason": "hermes-5-405b"
+      }
+    },
+    {
+      "id": "mistral",
+      "label": "Mistral",
+      "kind": "openai-compatible",
+      "base_url": "https://api.mistral.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "MISTRAL_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 47,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "mistral-large-4",
+        "code": "codestral-2508",
+        "reason": "mistral-large-4",
+        "vision": "pixtral-large",
+        "embed": "mistral-embed"
+      }
+    },
+    {
+      "id": "together",
+      "label": "Together AI",
+      "kind": "openai-compatible",
+      "base_url": "https://api.together.xyz/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "TOGETHER_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 49,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "meta-llama/Llama-4-Maverick",
+        "code": "Qwen/Qwen3-Coder",
+        "reason": "deepseek-ai/DeepSeek-V4",
+        "long": "Qwen/Qwen3-235B"
+      }
+    },
+    {
+      "id": "fireworks",
+      "label": "Fireworks AI",
+      "kind": "openai-compatible",
+      "base_url": "https://api.fireworks.ai/inference/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "FIREWORKS_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 50,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "accounts/fireworks/models/llama4-maverick",
+        "code": "accounts/fireworks/models/qwen3-coder",
+        "reason": "accounts/fireworks/models/deepseek-v4"
+      }
+    },
+    {
+      "id": "perplexity",
+      "label": "Perplexity (Sonar)",
+      "kind": "openai-compatible",
+      "base_url": "https://api.perplexity.ai",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "PERPLEXITY_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 51,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint responds 404 on /models (this API is chat-only); no key held"
+      },
+      "models": {
+        "chat": "sonar-pro",
+        "reason": "sonar-reasoning-pro",
+        "long": "sonar-pro"
+      }
+    },
+    {
+      "id": "nvidia-nim",
+      "label": "NVIDIA NIM",
+      "kind": "openai-compatible",
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "NVIDIA_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 52,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 unauthenticated (model list is public); inference still needs NVIDIA_API_KEY"
+      },
+      "models": {
+        "chat": "nvidia/nemotron-3-ultra-550b-a55b",
+        "code": "nvidia/nemotron-3-super",
+        "reason": "nvidia/nemotron-3-ultra-550b-a55b",
+        "math": "nvidia/nemotron-3-ultra-550b-a55b"
+      }
+    },
+    {
+      "id": "sambanova",
+      "label": "SambaNova",
+      "kind": "openai-compatible",
+      "base_url": "https://api.sambanova.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "SAMBANOVA_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 53,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 unauthenticated (model list is public); inference still needs SAMBANOVA_API_KEY"
+      },
+      "models": {
+        "chat": "Meta-Llama-4-Maverick-17B",
+        "code": "Qwen3-Coder-480B",
+        "reason": "DeepSeek-V4"
+      }
+    },
+    {
+      "id": "nebius",
+      "label": "Nebius AI Studio",
+      "kind": "openai-compatible",
+      "base_url": "https://api.studio.nebius.ai/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "NEBIUS_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 54,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "meta-llama/Llama-4-Maverick",
+        "code": "Qwen/Qwen3-Coder",
+        "reason": "deepseek-ai/DeepSeek-V4"
+      }
+    },
+    {
+      "id": "siliconflow",
+      "label": "SiliconFlow",
+      "kind": "openai-compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "SILICONFLOW_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 55,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "Qwen/Qwen3-235B",
+        "code": "Qwen/Qwen3-Coder",
+        "reason": "deepseek-ai/DeepSeek-V4",
+        "vision": "Qwen/Qwen3-VL"
+      }
+    },
+    {
+      "id": "hyperbolic",
+      "label": "Hyperbolic",
+      "kind": "openai-compatible",
+      "base_url": "https://api.hyperbolic.xyz/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "HYPERBOLIC_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 56,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "endpoint live but gated: 401 on /v1/models without a key"
+      },
+      "models": {
+        "chat": "meta-llama/Llama-4-Maverick",
+        "code": "Qwen/Qwen3-Coder",
+        "reason": "deepseek-ai/DeepSeek-V4"
+      }
+    },
+    {
+      "id": "aihubmix",
+      "label": "AiHubMix",
+      "kind": "openai-compatible",
+      "base_url": "https://aihubmix.com/v1",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "AIHUBMIX_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 57,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /v1/models -> 200 unauthenticated (model list is public); inference still needs AIHUBMIX_API_KEY"
+      },
+      "models": {
+        "chat": "gpt-5.6-sol",
+        "code": "gpt-5.3-codex",
+        "reason": "claude-opus-5",
+        "vision": "gemini-3.8-flash",
+        "long": "gemini-3.8-flash"
+      }
+    },
+    {
+      "id": "github-models",
+      "label": "GitHub Models",
+      "kind": "openai-compatible",
+      "base_url": "https://models.github.ai/inference",
+      "auth": {
+        "style": "bearer",
+        "key_required": true,
+        "key_env": "GITHUB_TOKEN"
+      },
+      "tier": "paid",
+      "priority": 58,
+      "verified": {
+        "reachable": true,
+        "checked": "2026-11-23",
+        "evidence": "GET /inference/models -> 200 unauthenticated (model list is public); inference needs GITHUB_TOKEN"
+      },
+      "models": {
+        "chat": "openai/gpt-5.6",
+        "code": "openai/gpt-5.3-codex",
+        "reason": "deepseek/deepseek-v4-pro"
+      }
+    },
+    {
+      "id": "azure-openai",
+      "label": "Azure OpenAI",
+      "kind": "openai-compatible",
+      "base_url": "https://{resource}.openai.azure.com/openai/v1",
+      "auth": {
+        "style": "api-key",
+        "key_required": true,
+        "key_env": "AZURE_OPENAI_API_KEY"
+      },
+      "tier": "paid",
+      "priority": 59,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "base_url needs a resource name substituted; the template host does not resolve"
+      },
+      "models": {
+        "chat": "gpt-5.6-sol",
+        "code": "gpt-5.3-codex",
+        "reason": "gpt-5.5-pro"
+      }
+    },
+    {
+      "id": "aws-bedrock",
+      "label": "AWS Bedrock",
+      "kind": "bedrock",
+      "base_url": "https://bedrock-runtime.{region}.amazonaws.com",
+      "auth": {
+        "style": "sigv4",
+        "key_required": true,
+        "key_env": "AWS_SECRET_ACCESS_KEY",
+        "key_env_extra": "AWS_ACCESS_KEY_ID"
+      },
+      "tier": "paid",
+      "priority": 60,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "base_url needs a region substituted; native SigV4, not OpenAI-compatible"
+      },
+      "models": {
+        "chat": "anthropic.claude-sonnet-5",
+        "code": "anthropic.claude-opus-5",
+        "reason": "anthropic.claude-opus-5"
+      }
+    },
+    {
+      "id": "google-vertex",
+      "label": "Google Vertex AI",
+      "kind": "vertex",
+      "base_url": "https://{region}-aiplatform.googleapis.com/v1",
+      "auth": {
+        "style": "oauth-adc",
+        "key_required": true,
+        "key_env": "GOOGLE_APPLICATION_CREDENTIALS"
+      },
+      "tier": "paid",
+      "priority": 61,
+      "verified": {
+        "reachable": false,
+        "checked": "2026-11-23",
+        "evidence": "base_url needs a region substituted; native OAuth, not OpenAI-compatible"
+      },
+      "models": {
+        "chat": "gemini-3.8-flash",
+        "code": "gemini-3.8-flash",
+        "reason": "gemini-4-argon"
+      }
+    }
+  ]
+}

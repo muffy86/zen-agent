@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zen-agent/protocol/schema/tool-result.schema.json",
+  "title": "zen-agent tool result envelope (protocol v1)",
+  "type": "object",
+  "required": ["tool", "ok", "result", "decision", "code"],
+  "properties": {
+    "tool": { "type": "string" },
+    "ok": { "type": "boolean" },
+    "result": {
+      "type": "string",
+      "description": "on deny always 'DENIED:<code>'; on error always 'ERROR:<reason>'"
+    },
+    "decision": { "enum": ["allow", "deny"] },
+    "code": {
+      "type": "string",
+      "enum": [
+        "ok", "tool_not_enabled", "injection_suspected", "path_traversal",
+        "path_outside_write_root", "host_not_allowed", "expression_too_large",
+        "unknown_tool", "tool_error"
+      ]
+    }
+  }
+}
