@@ -8,6 +8,7 @@ import { loadRules, evaluate } from './policy.js';
 import { runTool } from './tools.js';
 import { runScriptedLoop, runLiveLoop } from './agent.js';
 import { MemoryStore } from './memory.js';
+import { McpStdioClient, McpHttpClient } from './mcp.js';
 import type { RouteDecision, RouteRequest, ScriptTurn, ToolContext } from './types.js';
 
 import { fileURLToPath } from 'node:url';
@@ -184,6 +185,25 @@ async function main(): Promise<void> {
       const outcome = await runLiveLoop(decision, String(args.prompt ?? 'reply with exactly: ZEN_OK'), { root: ROOT, rules: loadRules(join(FIXTURES, 'policy-cases.json')), live: true, apiKey });
       new MemoryStore(join(ROOT, 'memory', 'memory.jsonl')).append({ kind: 'answer', route: decision.route_id, tools: outcome.tools, final: outcome.final });
       console.log(JSON.stringify({ route: decision.route_id, provider: decision.provider, model: decision.model, tools: outcome.tools, results: outcome.results, final: outcome.final }, null, 2));
+      break;
+    }
+    case 'mcp': {
+      // auto-detect the transport: an http(s) target speaks HTTP MCP, anything else is a command
+      const target = String(args._ ?? '');
+      if (target === '') { console.error('usage: zen-agent mcp <url|command> [--call tool --args json]'); process.exitCode = 2; break; }
+      const client = target.startsWith('http')
+        ? new McpHttpClient(target, args.header ? { authorization: String(args.header) } : {})
+        : new McpStdioClient(target, typeof args.arg === 'string' ? [args.arg] : []);
+      await client.start();
+      if (typeof args.call === 'string') {
+        const result = await client.callTool(args.call, JSON.parse(String(args.args ?? '{}')) as Record<string, unknown>);
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        const tools = await client.listTools();
+        for (const tool of tools) console.log(`${tool.name.padEnd(28)} ${(tool.description ?? '').slice(0, 90)}`);
+        console.log(`\n${tools.length} tools from ${target}`);
+      }
+      client.close();
       break;
     }
     case 'memory': {

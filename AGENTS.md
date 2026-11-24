@@ -43,6 +43,13 @@ cd core-kotlin && /opt/gradle/gradle-8.10.2/bin/gradle build fatJar
   non-empty `tool_call_id` (`messages[2]: tool messages must include a non-empty string
   tool_call_id`). The assistant turn must carry the matching `tool_calls` array. All three heads do
   this; do not "simplify" it back to `{role: 'tool', content}`.
+- **MCP over HTTP**: `POST`ing `initialize` to `127.0.0.1:8802/mcp` returns the JSON-RPC reply wrapped
+  in an SSE `data:` line **and** an `mcp-session-id` header. Omitting that header on the next call
+  yields `400 Bad Request: Missing session ID`. All three heads implement the session handshake.
+- **Same tool, two answers**: `device_capabilities` reported `shizuku.available: true` from the node
+  and kotlin calls and `false` (with `rish present but Shizuku is not running`) from the python call
+  minutes apart. That is the gateway's live probe, not a client difference — treat device
+  capability fields as momentary, not cached.
 - **Run opencode/similar tools inside a real git repo**, never in `/root`: their snapshot feature
   makes the working directory a git work tree and can swallow the home directory.
 

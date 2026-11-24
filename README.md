@@ -14,8 +14,21 @@ providers/           providers.json — 32 providers, capability→model map, ti
 runtime-node/        TypeScript head   (CLI: zen-agent)        tests: node:test
 tools-python/        Python head       (CLI: zen-agent-py)     tests: pytest
 core-kotlin/         Kotlin/JVM head   (CLI: fat jar)          tests: kotlin.test
-scripts/             conformance.sh · differential.py · smoke-live.sh
+scripts/             conformance.sh · differential.py · smoke-live.sh · package.sh
 ```
+
+Components per head — stated per head, because a claim of symmetry that is not tested is decoration:
+
+| Component | node | python | kotlin |
+|---|---|---|---|
+| provider registry + routing + gate + tools | ● | ● | ● |
+| agent loop (scripted + live, OpenAI & ollama shapes) | ● | ● | ● |
+| portable memory (JSONL + lexical recall) | ● | ● | ● |
+| MCP client over stdio | ● | ● | – |
+| MCP client over HTTP+SSE (session handshake) | ● | ● | ● |
+
+The four `●` rows in column one are covered by the shared golden vectors; the MCP rows are not
+vectors but were run live against the device gateway, on all three heads.
 
 ## What is verified, and how
 
@@ -29,6 +42,8 @@ scripts/             conformance.sh · differential.py · smoke-live.sh
 | The gate really refuses things | `policy/p04`: `/etc/passwd` → `DENIED:path_outside_write_root`; `p08`: injection text → `injection_suspected`; `p09`: `shell.exec` → `tool_not_enabled` |
 | Provider catalogs are real, not guessed | Zen: **108 model ids** fetched live; clawrouter: 22; Ollama: 13 installed models |
 | Zen inference needs a credential | live probe: `POST opencode.ai/zen/v1/chat/completions` without a key → **429 FreeUsageLimitError** |
+| The MCP component reaches the device's real tool bus | all three heads list **19 device tools** (`/mcp` on 8802) and **23 browser tools** (8801), and each called `device_capabilities` successfully |
+| Artifacts install clean | wheel in a fresh venv: **32/32 vectors**; tarball in a fresh npm dir: works; fat jar: standalone |
 
 ## Quickstart
 
@@ -50,10 +65,25 @@ cd runtime-node && node dist/cli.js providers     # ● verified reachable, ○ 
 Talk to a model through the routed provider, whole loop included:
 
 ```bash
-node dist/cli.js live --capability code --prompt "Use the calc tool to compute 21*2"
+cd runtime-node && node dist/cli.js live --capability code --prompt "Use the calc tool to compute 21*2"
 java -jar core-kotlin/build/libs/zen-agent-kotlin-core-1.0.0-all.jar live --prompt "reply with exactly: ZEN_OK"
 tools-python/.venv/bin/python -m zen_agent.cli live --prompt "reply with exactly: ZEN_OK"
 ```
+
+### Driving the device's own tool bus
+
+The gateway on this machine speaks MCP over HTTP, so the MCP component has both transports:
+
+```bash
+node dist/cli.js mcp http://127.0.0.1:8802/mcp                                   # 19 Android-control tools
+node dist/cli.js mcp http://127.0.0.1:8801/mcp/                                  # 23 browser-control tools
+node dist/cli.js mcp http://127.0.0.1:8802/mcp --call device_capabilities --args '{}'
+node dist/cli.js mcp /path/to/mcp-server --arg --whatever                       # stdio servers too (node, python)
+```
+
+Two things the gateway enforces and this client honours: the `mcp-session-id` header returned by
+`initialize` must be echoed on every later call, and each JSON-RPC reply arrives inside an SSE
+`data:` line rather than as a bare body.
 
 ## Routing in one table
 

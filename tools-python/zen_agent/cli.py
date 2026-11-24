@@ -129,6 +129,11 @@ def main(argv: List[str] | None = None) -> int:
     memory_parser = sub.add_parser("memory")
     memory_parser.add_argument("--query", default="")
 
+    mcp_parser = sub.add_parser("mcp")
+    mcp_parser.add_argument("target", help="http(s) MCP url, or a command for stdio")
+    mcp_parser.add_argument("--call")
+    mcp_parser.add_argument("--args", default="{}")
+
     sub.add_parser("conformance")
     sub.add_parser("doctor")
     sub.add_parser("selftest")
@@ -196,6 +201,21 @@ def main(argv: List[str] | None = None) -> int:
         from .memory import MemoryStore
 
         print(json.dumps(MemoryStore(repo_root() / "memory" / "memory.jsonl").recall(args.query), indent=2))
+        return 0
+
+    if args.command == "mcp":
+        from .mcp_client import McpHttpClient, McpStdioClient
+
+        client = McpHttpClient(args.target) if args.target.startswith("http") else McpStdioClient(args.target)
+        client.start()
+        if args.call:
+            print(json.dumps(client.call_tool(args.call, json.loads(args.args)), indent=2))
+        else:
+            tools = client.list_tools()
+            for tool in tools:
+                print(f"{tool['name']:<28} {(tool.get('description') or '')[:90]}")
+            print(f"\n{len(tools)} tools from {args.target}")
+        client.close()
         return 0
 
     if args.command == "conformance":

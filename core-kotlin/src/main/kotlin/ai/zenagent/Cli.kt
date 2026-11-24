@@ -199,6 +199,26 @@ fun main(args: Array<String>) {
                 "tools" to outcome.tools, "results" to outcome.results, "final" to outcome.final,
             ), indent = 2))
         }
+        "mcp" -> {
+            // auto-detect the transport: an http(s) target speaks HTTP MCP
+            val target = rest.firstOrNull { !it.startsWith("--") } ?: ""
+            if (target.isEmpty()) {
+                println("usage: zen-agent mcp http://127.0.0.1:8802/mcp [--call tool --args json]")
+            } else if (!target.startsWith("http")) {
+                println("this head speaks HTTP MCP only; use the node or python head for stdio servers")
+            } else {
+                val client = McpHttpClient(target).start()
+                val tool = flag(rest, "call")
+                if (tool != null && tool.isNotEmpty()) {
+                    val args = Conversions.toMap(Json.parse(flag(rest, "args") ?: "{}"))
+                    println(jsonText(Conversions.toAny(client.callTool(tool, args)), indent = 2))
+                } else {
+                    val tools = client.listTools()
+                    tools.forEach { (name, description) -> println("${name.padEnd(28)} ${description.take(90)}") }
+                    println("\n${tools.size} tools from $target")
+                }
+            }
+        }
         "memory" -> {
             val hits = MemoryStore(Paths2.repoRoot().resolve("memory").resolve("memory.jsonl")).recall(flag(rest, "query") ?: "")
             println(jsonText(hits.map { it.render() }, indent = 2))
