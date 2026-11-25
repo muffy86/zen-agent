@@ -41,7 +41,9 @@ vectors but were run live against the device gateway, on all three heads.
 | The agentic loop really calls a tool | live run, all three heads: prompt `compute 21*2 with calc` → tool `calc` → result `42` → final `42` |
 | The gate really refuses things | `policy/p04`: `/etc/passwd` → `DENIED:path_outside_write_root`; `p08`: injection text → `injection_suspected`; `p09`: `shell.exec` → `tool_not_enabled` |
 | Provider catalogs are real, not guessed | Zen: **108 model ids** fetched live; clawrouter: 22; Ollama: 13 installed models |
-| Zen inference needs *entitlement*, not just a key | live probe: `POST opencode.ai/zen/v1/chat/completions` → **429 FreeUsageLimitError**, and the identical response comes back with a dummy key in place. The free lane is for the OpenCode client; a third-party client needs **OpenCode Go** or Console credits |
+| Zen works from this client with a Console key | personal key `zen-agent (kelivo)`, scope *Models: Request*: `GET opencode.ai/inference/v1/models` → **200 (77 ids)**; `POST /inference/openai/v1/chat/completions` → **200** for `glm-5.3`, `glm-5.3-flash`, `deepseek-v4.1-flash`, `kimi-k3`, `gemini-3.8-flash`; all three heads complete a live run through it |
+| Zen's free ids are refused to non-OpenCode clients | `*-free` ids → **429 FreeUsageLimitError** with a valid key present (vendor doc: HTTP 403 from other clients). Paid/Go ids are the only ones that work here |
+| Zen usage is billed, not free | every measured call reported `billing_source: balance` — charged to Console credit (glm-5.3-flash $0.0000494, deepseek-v4.1-flash $0.000017, glm-5.3 $0.00014264) |
 | The MCP component reaches the device's real tool bus | all three heads list **19 device tools** (`/mcp` on 8802) and **23 browser tools** (8801), and each called `device_capabilities` successfully |
 | Artifacts install clean | wheel in a fresh venv: **32/32 vectors**; tarball in a fresh npm dir: works; fat jar: standalone |
 
@@ -121,6 +123,16 @@ as live mode — that is why the tests cover the gate instead of trusting it:
 5. `calc` size bound; then allow
 
 A denial is **data**: the loop keeps going and the model is told what was refused.
+
+## Zen / Console — the parts that are easy to get wrong
+
+- **Base URL is `https://opencode.ai/inference/openai/v1`**, not `/zen/v1` (the vendor's Inference API
+  doc). `/zen/v1` still answers a model list unauthenticated, which is a good way to mistake a catalog
+  for a working route.
+- **A key is not entitlement, and entitlement is not the same as free.** Free-tier chat models are
+  OpenCode-client-only; another client gets a refusal. Paid models or a Go plan are what work here.
+- **Other clients are billed to balance.** Measured on every call: `billing_source: balance`.
+- The key lives in `.env` (`OPENCODE_ZEN_API_KEY`), created 2026-11-24, **expires 2027-02-23**.
 
 ## Deliberate non-claims
 

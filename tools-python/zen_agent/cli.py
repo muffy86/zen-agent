@@ -39,6 +39,22 @@ def load_dotenv() -> None:
                 os.environ[key] = value
 
 
+def present_env_keys() -> List[str]:
+    """Which of the registry's credentials does this machine actually hold?"""
+    return [key for key in
+            (provider["auth"].get("key_env") for provider in load_registry()["providers"])
+            if key and os.environ.get(key)]
+
+
+def with_local_credentials(request: Dict[str, Any]) -> Dict[str, Any]:
+    """A real CLI routes with the credentials present here; an explicit --env list always wins."""
+    if request.get("env_keys"):
+        return request
+    request = dict(request)
+    request["env_keys"] = present_env_keys()
+    return request
+
+
 def conformance() -> int:
     registry = load_registry()
     rules = load_rules()
@@ -144,6 +160,10 @@ def main(argv: List[str] | None = None) -> int:
     live_parser.add_argument("--capability", default="chat")
     live_parser.add_argument("--prompt", default="reply with exactly: ZEN_OK")
     live_parser.add_argument("--prefer", default="local")
+    live_parser.add_argument("--available")
+    live_parser.add_argument("--down")
+    live_parser.add_argument("--env")
+    live_parser.add_argument("--free-only", action="store_true")
 
     memory_parser = sub.add_parser("memory")
     memory_parser.add_argument("--query", default="")
@@ -196,7 +216,7 @@ def main(argv: List[str] | None = None) -> int:
             "free_only": args.free_only,
         }
         request = {k: v for k, v in request.items() if v is not None}
-        decision = route(load_registry(), request)
+        decision = route(load_registry(), with_local_credentials(request))
         if args.json:
             print(json.dumps(decision, indent=2))
         else:
@@ -223,7 +243,16 @@ def main(argv: List[str] | None = None) -> int:
     if args.command == "live":
         from .memory import MemoryStore
 
-        decision = route(load_registry(), {"capability": args.capability, "prefer": args.prefer})
+        live_request: Dict[str, Any] = {"capability": args.capability, "prefer": args.prefer}
+        if args.available:
+            live_request["providers_available"] = args.available.split(",")
+        if args.down:
+            live_request["providers_down"] = args.down.split(",")
+        if args.env:
+            live_request["env_keys"] = args.env.split(",")
+        if args.free_only:
+            live_request["free_only"] = True
+        decision = route(load_registry(), with_local_credentials(live_request))
         api_key = os.environ.get(decision["auth_key_env"] or "", None)
         outcome = run_live_loop(decision, args.prompt, {"root": repo_root(), "rules": load_rules(), "live": True}, api_key)
         MemoryStore(repo_root() / "memory" / "memory.jsonl").append(

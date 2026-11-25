@@ -34,6 +34,14 @@ private fun requestFrom(args: List<String>): RouteRequest = RouteRequest(
     freeOnly = has(args, "free-only"),
 )
 
+/** Which of the registry's credentials does this machine actually hold? */
+private fun presentEnvKeys(providers: List<Provider>): List<String> =
+    providers.mapNotNull { it.auth.keyEnv }.filter { DotEnv.get(it)?.isNotEmpty() == true }
+
+/** A real CLI routes with the credentials present here; an explicit --env list always wins. */
+private fun withLocalCredentials(request: RouteRequest, providers: List<Provider>): RouteRequest =
+    if (request.envKeys.isNotEmpty()) request else request.copy(envKeys = presentEnvKeys(providers))
+
 /** Golden-vector conformance harness (protocol §8.3). Returns the number of failing vectors. */
 private fun conformance(): Int {
     val providers = Registry.load()
@@ -186,7 +194,7 @@ fun main(args: Array<String>) {
             println("$mark ${provider.id.padEnd(16)} ${provider.tier.padEnd(6)} ${provider.priority.toString().padStart(3)} ${provider.kind.padEnd(18)} ${provider.baseUrl}")
         }
         "route" -> {
-            val decision = Router.route(providers, requestFrom(rest))
+            val decision = Router.route(providers, withLocalCredentials(requestFrom(rest), providers))
             if (has(rest, "json")) {
                 println(jsonText(decision.asMap(), indent = 2))
             } else {
@@ -209,7 +217,7 @@ fun main(args: Array<String>) {
             println(jsonText(mapOf("tools" to outcome.tools, "results" to outcome.results, "final" to outcome.final), indent = 2))
         }
         "live" -> {
-            val decision = Router.route(providers, requestFrom(rest))
+            val decision = Router.route(providers, withLocalCredentials(requestFrom(rest), providers))
             val apiKey = DotEnv.get(decision.authKeyEnv)
             val outcome = Agent.runLiveLoop(
                 decision,

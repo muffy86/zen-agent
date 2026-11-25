@@ -54,6 +54,20 @@ function loadDotEnv(): void {
   }
 }
 
+/** Which of the registry's credentials does this machine actually hold? */
+function presentEnvKeys(): string[] {
+  const registry = loadRegistry(REGISTRY);
+  return registry.providers
+    .map((p) => p.auth.key_env)
+    .filter((key): key is string => Boolean(key) && (process.env[key as string] ?? '') !== '');
+}
+
+/** A real CLI routes with the credentials present here; an explicit --env list always wins. */
+function withLocalCredentials(req: RouteRequest): RouteRequest {
+  if (req.env_keys && req.env_keys.length > 0) return req;
+  return { ...req, env_keys: presentEnvKeys() };
+}
+
 function json(value: unknown): void { process.stdout.write(`${JSON.stringify(value, null, 2)}\n`); }
 
 function requestFrom(args: Record<string, string | boolean>): RouteRequest {
@@ -174,7 +188,7 @@ async function main(): Promise<void> {
       break;
     }
     case 'route': {
-      const decision = route(loadRegistry(REGISTRY), requestFrom(args));
+      const decision = route(loadRegistry(REGISTRY), withLocalCredentials(requestFrom(args)));
       if (args.json) json(decision);
       else console.log(`${decision.status} ${decision.route_id ?? decision.error_code} -> ${decision.provider ?? '-'} / ${decision.model ?? '-'} (fallbacks: ${decision.fallbacks.map((f) => f.provider).join(', ') || 'none'})`);
       process.exitCode = decision.status === 'ok' ? 0 : 3;
@@ -198,8 +212,7 @@ async function main(): Promise<void> {
     }
     case 'live': {
       const registry = loadRegistry(REGISTRY);
-      const req = requestFrom(args);
-      const decision = route(registry, req);
+      const decision = route(registry, withLocalCredentials(requestFrom(args)));
       const apiKey = decision.auth_key_env ? process.env[decision.auth_key_env] : undefined;
       if (decision.status !== 'ok') { console.error(`no route: ${decision.error_code}`); process.exit(2); }
       const outcome = await runLiveLoop(decision, String(args.prompt ?? 'reply with exactly: ZEN_OK'), { root: ROOT, rules: loadRules(join(FIXTURES, 'policy-cases.json')), live: true, apiKey });
@@ -259,6 +272,7 @@ async function main(): Promise<void> {
       const registry = loadRegistry(REGISTRY);
       const decision = route(registry, { capability: 'code', prefer: 'local' });
       console.log(`registry: ${registry.providers.length} providers`);
+      console.log(`keys:     ${presentEnvKeys().join(', ') || 'none present'}`);
       console.log(`route:    ${decision.route_id} -> ${decision.model} @ ${decision.endpoint}`);
       console.log(`node:     ${process.version}`);
       console.log(`root:     ${ROOT}`);

@@ -28,7 +28,9 @@ def run_scripted_loop(script: List[Dict[str, Any]], ctx: Dict[str, Any]) -> Dict
 
 
 def _headers(decision: Dict[str, Any], api_key: Optional[str]) -> Dict[str, str]:
-    headers = {"content-type": "application/json"}
+    # Cloudflare fronts opencode.ai and rejects the default Python-urllib signature with
+    # `403 error code: 1010`. Identify the client honestly instead of omitting a UA.
+    headers = {"content-type": "application/json", "accept": "application/json", "user-agent": "zen-agent/1.0"}
     if api_key:
         if decision.get("auth_style") == "bearer":
             headers["authorization"] = f"Bearer {api_key}"

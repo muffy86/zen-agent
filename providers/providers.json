@@ -128,32 +128,33 @@
     },
     {
       "id": "opencode-zen",
-      "label": "OpenCode Zen (108 model ids observed)",
+      "label": "OpenCode Console / Go (inference API, 77 models with a key)",
       "kind": "openai-compatible",
-      "base_url": "https://opencode.ai/zen/v1",
+      "base_url": "https://opencode.ai/inference/openai/v1",
       "auth": {
         "style": "bearer",
-        "key_required": false,
+        "key_required": true,
         "key_env": "OPENCODE_ZEN_API_KEY"
       },
-      "tier": "free",
+      "tier": "paid",
       "priority": 20,
       "verified": {
         "reachable": true,
-        "checked": "2026-11-23",
-        "evidence": "GET /v1/models -> 200 (108 ids); POST /v1/chat/completions without a key -> 429 FreeUsageLimitError ('Free usage limit reached') - catalog yes, inference needs a key or OpenCode Go"
+        "checked": "2026-11-24",
+        "evidence": "personal key 'zen-agent (kelivo)', scope Models:Request. GET https://opencode.ai/inference/v1/models -> 200 (77 ids with key). POST /inference/openai/v1/chat/completions -> 200 for glm-5.3 ($0.00014264), glm-5.3-flash ($0.0000494), deepseek-v4.1-flash ($0.000017), kimi-k3 ($0.001221), gemini-3.8-flash ($0.0002775); all reported billing_source=balance. The *-free ids are refused to non-OpenCode clients (429 here, vendor doc says 403)."
       },
       "models": {
-        "chat": "big-pickle",
-        "code": "gpt-5.3-codex",
-        "reason": "big-pickle",
+        "chat": "glm-5.3-flash",
+        "code": "glm-5.3-flash",
+        "reason": "glm-5.3",
         "vision": "gemini-3.8-flash",
-        "long": "claude-sonnet-5",
-        "math": "gpt-5.5-pro",
-        "free": "deepseek-v4.1-flash-free",
+        "long": "kimi-k3",
+        "math": "deepseek-v4.1-flash",
+        "free": "deepseek-v4.1-flash",
         "voice": "gpt-live-1.1",
         "embed": "text-embedding-3-large"
-      }
+      },
+      "notes": "Base URL is /inference/openai/v1, not /zen/v1 (vendor doc: docs/console/api/inference). Free-tier chat models are OpenCode-client-only; from here use paid/Go ids. vision/voice/embed ids are catalog entries, not measured."
     },
     {
       "id": "openrouter",

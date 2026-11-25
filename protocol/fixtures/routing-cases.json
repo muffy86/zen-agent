@@ -2,98 +2,435 @@
   "version": 1,
   "name": "routing golden vectors",
   "contract": "protocol/agent-protocol.md#3",
-  "asserted_fields": ["status", "route_id", "capability", "provider", "model", "tier", "auth_style", "key_required", "fallback_providers", "error_code"],
+  "asserted_fields": [
+    "status",
+    "route_id",
+    "capability",
+    "provider",
+    "model",
+    "tier",
+    "auth_style",
+    "key_required",
+    "fallback_providers",
+    "error_code"
+  ],
   "note": "Every runtime (node, python, kotlin) must return these values unchanged. 'reason' is free text and is deliberately not asserted. fallbacks are 'the next up to 3 candidates' in the same sort order as the winner.",
   "cases": [
     {
       "id": "r01",
       "note": "balanced default on three reachable tiers: local beats free beats paid",
-      "request": { "capability": "code", "providers_available": ["clawrouter", "ollama", "opencode-zen"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-code-clawrouter", "capability": "code", "provider": "clawrouter", "model": "auto:code", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": ["ollama", "opencode-zen"], "error_code": null }
+      "request": {
+        "capability": "code",
+        "providers_available": [
+          "clawrouter",
+          "ollama",
+          "opencode-zen"
+        ],
+        "env_keys": [
+          "OPENCODE_ZEN_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-code-clawrouter",
+        "capability": "code",
+        "provider": "clawrouter",
+        "model": "auto:code",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [
+          "ollama",
+          "opencode-zen"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r02",
       "note": "capability narrows the field: ollama has no vision model, so it drops out",
-      "request": { "capability": "vision", "providers_available": ["clawrouter", "ollama", "opencode-zen"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-vision-clawrouter", "capability": "vision", "provider": "clawrouter", "model": "auto:vision", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": ["opencode-zen"], "error_code": null }
+      "request": {
+        "capability": "vision",
+        "providers_available": [
+          "clawrouter",
+          "ollama",
+          "opencode-zen"
+        ],
+        "env_keys": [
+          "OPENCODE_ZEN_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-vision-clawrouter",
+        "capability": "vision",
+        "provider": "clawrouter",
+        "model": "auto:vision",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [
+          "opencode-zen"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r03",
       "note": "a provider needing a key that is absent is filtered out, not chosen and then broken",
-      "request": { "capability": "voice", "providers_available": ["clawrouter", "groq", "openai"], "env_keys": ["OPENAI_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-voice-clawrouter", "capability": "voice", "provider": "clawrouter", "model": "auto:voice", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": ["openai"], "error_code": null }
+      "request": {
+        "capability": "voice",
+        "providers_available": [
+          "clawrouter",
+          "groq",
+          "openai"
+        ],
+        "env_keys": [
+          "OPENAI_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-voice-clawrouter",
+        "capability": "voice",
+        "provider": "clawrouter",
+        "model": "auto:voice",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [
+          "openai"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r04",
       "note": "local tier absent: only the credentialed paid provider remains",
-      "request": { "capability": "voice", "providers_available": ["groq", "openai"], "env_keys": ["OPENAI_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-voice-openai", "capability": "voice", "provider": "openai", "model": "gpt-realtime", "tier": "paid", "auth_style": "bearer", "key_required": true, "fallback_providers": [], "error_code": null }
+      "request": {
+        "capability": "voice",
+        "providers_available": [
+          "groq",
+          "openai"
+        ],
+        "env_keys": [
+          "OPENAI_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-voice-openai",
+        "capability": "voice",
+        "provider": "openai",
+        "model": "gpt-realtime",
+        "tier": "paid",
+        "auth_style": "bearer",
+        "key_required": true,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r05",
       "note": "unkeyed paid provider filtered; the remaining local one serves math from an installed model",
-      "request": { "capability": "math", "providers_available": ["ollama", "cerebras"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-math-ollama", "capability": "math", "provider": "ollama", "model": "glm-5.3-flash:cloud", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": [], "error_code": null }
+      "request": {
+        "capability": "math",
+        "providers_available": [
+          "ollama",
+          "cerebras"
+        ],
+        "env_keys": []
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-math-ollama",
+        "capability": "math",
+        "provider": "ollama",
+        "model": "glm-5.3-flash:cloud",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r06",
       "note": "prefer=quality sorts by priority first, so the lower-priority-numbered paid provider wins",
-      "request": { "capability": "long", "prefer": "quality", "providers_available": ["anthropic", "moonshot-kimi"], "env_keys": ["ANTHROPIC_API_KEY", "MOONSHOT_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-long-anthropic", "capability": "long", "provider": "anthropic", "model": "claude-sonnet-5", "tier": "paid", "auth_style": "x-api-key", "key_required": true, "fallback_providers": ["moonshot-kimi"], "error_code": null }
+      "request": {
+        "capability": "long",
+        "prefer": "quality",
+        "providers_available": [
+          "anthropic",
+          "moonshot-kimi"
+        ],
+        "env_keys": [
+          "ANTHROPIC_API_KEY",
+          "MOONSHOT_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-long-anthropic",
+        "capability": "long",
+        "provider": "anthropic",
+        "model": "claude-sonnet-5",
+        "tier": "paid",
+        "auth_style": "x-api-key",
+        "key_required": true,
+        "fallback_providers": [
+          "moonshot-kimi"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r07",
       "note": "prefer=local ranks locality first; all three locals are candidates and fill the fallback list",
-      "request": { "capability": "chat", "prefer": "local", "providers_available": ["clawrouter", "ollama", "lmstudio", "opencode-zen"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-chat-clawrouter", "capability": "chat", "provider": "clawrouter", "model": "auto:chat", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": ["ollama", "lmstudio", "opencode-zen"], "error_code": null }
+      "request": {
+        "capability": "chat",
+        "prefer": "local",
+        "providers_available": [
+          "clawrouter",
+          "ollama",
+          "lmstudio",
+          "opencode-zen"
+        ],
+        "env_keys": [
+          "OPENCODE_ZEN_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-chat-clawrouter",
+        "capability": "chat",
+        "provider": "clawrouter",
+        "model": "auto:chat",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [
+          "ollama",
+          "lmstudio",
+          "opencode-zen"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r08",
-      "note": "free_only keeps credential-free providers even when paid keys are present; Zen needs no key, so its effective auth is none",
-      "request": { "capability": "chat", "free_only": true, "providers_available": ["openai", "openrouter", "opencode-zen"], "env_keys": ["OPENAI_API_KEY", "OPENROUTER_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-chat-opencode-zen", "capability": "chat", "provider": "opencode-zen", "model": "big-pickle", "tier": "free", "auth_style": "none", "key_required": false, "fallback_providers": [], "error_code": null }
+      "note": "free_only keeps providers that need no credential at all, even when paid keys are present. (Zen used to demonstrate this; it now requires its own key.)",
+      "request": {
+        "capability": "chat",
+        "free_only": true,
+        "providers_available": [
+          "openai",
+          "openrouter",
+          "clawrouter"
+        ],
+        "env_keys": [
+          "OPENAI_API_KEY",
+          "OPENROUTER_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-chat-clawrouter",
+        "capability": "chat",
+        "provider": "clawrouter",
+        "model": "auto:chat",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r09",
       "note": "no candidate is an error, never a guess at some default provider",
-      "request": { "capability": "vision", "providers_available": ["ollama", "llama-cpp"], "env_keys": [] },
-      "expect": { "status": "error", "route_id": null, "capability": "vision", "provider": null, "model": null, "tier": null, "auth_style": null, "key_required": null, "fallback_providers": [], "error_code": "no_provider_for_capability" }
+      "request": {
+        "capability": "vision",
+        "providers_available": [
+          "ollama",
+          "llama-cpp"
+        ],
+        "env_keys": []
+      },
+      "expect": {
+        "status": "error",
+        "route_id": null,
+        "capability": "vision",
+        "provider": null,
+        "model": null,
+        "tier": null,
+        "auth_style": null,
+        "key_required": null,
+        "fallback_providers": [],
+        "error_code": "no_provider_for_capability"
+      }
     },
     {
       "id": "r10",
       "note": "capability inferred from tags",
-      "request": { "tags": ["refactor this kotlin module", "add tests"], "providers_available": ["clawrouter"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-code-clawrouter", "capability": "code", "provider": "clawrouter", "model": "auto:code", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": [], "error_code": null }
+      "request": {
+        "tags": [
+          "refactor this kotlin module",
+          "add tests"
+        ],
+        "providers_available": [
+          "clawrouter"
+        ],
+        "env_keys": []
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-code-clawrouter",
+        "capability": "code",
+        "provider": "clawrouter",
+        "model": "auto:code",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r11",
       "note": "capability inferred from a prompt; 'pdf'/'summarize' mean long-context",
-      "request": { "prompt": "summarize this 400 page pdf into a digest", "providers_available": ["moonshot-kimi"], "env_keys": ["MOONSHOT_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-long-moonshot-kimi", "capability": "long", "provider": "moonshot-kimi", "model": "kimi-k3", "tier": "paid", "auth_style": "bearer", "key_required": true, "fallback_providers": [], "error_code": null }
+      "request": {
+        "prompt": "summarize this 400 page pdf into a digest",
+        "providers_available": [
+          "moonshot-kimi"
+        ],
+        "env_keys": [
+          "MOONSHOT_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-long-moonshot-kimi",
+        "capability": "long",
+        "provider": "moonshot-kimi",
+        "model": "kimi-k3",
+        "tier": "paid",
+        "auth_style": "bearer",
+        "key_required": true,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r12",
       "note": "math inference wins over reason; cerebras serves math",
-      "request": { "tags": ["solve", "integral"], "providers_available": ["cerebras", "nous"], "env_keys": ["CEREBRAS_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-math-cerebras", "capability": "math", "provider": "cerebras", "model": "qwen3-235b", "tier": "paid", "auth_style": "bearer", "key_required": true, "fallback_providers": [], "error_code": null }
+      "request": {
+        "tags": [
+          "solve",
+          "integral"
+        ],
+        "providers_available": [
+          "cerebras",
+          "nous"
+        ],
+        "env_keys": [
+          "CEREBRAS_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-math-cerebras",
+        "capability": "math",
+        "provider": "cerebras",
+        "model": "qwen3-235b",
+        "tier": "paid",
+        "auth_style": "bearer",
+        "key_required": true,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r13",
-      "note": "free tier ahead of paid in balanced ordering; nvidia-nim drops out for want of a key",
-      "request": { "capability": "reason", "providers_available": ["opencode-zen", "openai", "nvidia-nim"], "env_keys": ["OPENAI_API_KEY"] },
-      "expect": { "status": "ok", "route_id": "rt-reason-opencode-zen", "capability": "reason", "provider": "opencode-zen", "model": "big-pickle", "tier": "free", "auth_style": "none", "key_required": false, "fallback_providers": ["openai"], "error_code": null }
+      "note": "balancing prefers the free tier only when it needs no credential; Zen now needs one, and nvidia-nim does not have one here, so openai is the fallback",
+      "request": {
+        "capability": "reason",
+        "providers_available": [
+          "opencode-zen",
+          "openai",
+          "nvidia-nim"
+        ],
+        "env_keys": [
+          "OPENAI_API_KEY",
+          "OPENCODE_ZEN_API_KEY"
+        ]
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-reason-opencode-zen",
+        "capability": "reason",
+        "provider": "opencode-zen",
+        "model": "glm-5.3",
+        "tier": "paid",
+        "auth_style": "bearer",
+        "key_required": true,
+        "fallback_providers": [
+          "openai"
+        ],
+        "error_code": null
+      }
     },
     {
       "id": "r14",
       "note": "embedding capability is its own route; only the local provider offers it keylessly here",
-      "request": { "capability": "embed", "providers_available": ["ollama", "openai", "google-gemini"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-embed-ollama", "capability": "embed", "provider": "ollama", "model": "nomic-embed-text:latest", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": [], "error_code": null }
+      "request": {
+        "capability": "embed",
+        "providers_available": [
+          "ollama",
+          "openai",
+          "google-gemini"
+        ],
+        "env_keys": []
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-embed-ollama",
+        "capability": "embed",
+        "provider": "ollama",
+        "model": "nomic-embed-text:latest",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [],
+        "error_code": null
+      }
     },
     {
       "id": "r15",
       "note": "providers_down removes a reachable-but-unhealthy provider from the candidate set",
-      "request": { "capability": "code", "providers_available": ["clawrouter", "ollama"], "providers_down": ["clawrouter"], "env_keys": [] },
-      "expect": { "status": "ok", "route_id": "rt-code-ollama", "capability": "code", "provider": "ollama", "model": "qwen2.5-coder:1.5b", "tier": "local", "auth_style": "none", "key_required": false, "fallback_providers": [], "error_code": null }
+      "request": {
+        "capability": "code",
+        "providers_available": [
+          "clawrouter",
+          "ollama"
+        ],
+        "providers_down": [
+          "clawrouter"
+        ],
+        "env_keys": []
+      },
+      "expect": {
+        "status": "ok",
+        "route_id": "rt-code-ollama",
+        "capability": "code",
+        "provider": "ollama",
+        "model": "qwen2.5-coder:1.5b",
+        "tier": "local",
+        "auth_style": "none",
+        "key_required": false,
+        "fallback_providers": [],
+        "error_code": null
+      }
     }
   ]
 }
