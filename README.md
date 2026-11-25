@@ -30,6 +30,16 @@ Components per head — stated per head, because a claim of symmetry that is not
 The four `●` rows in column one are covered by the shared golden vectors; the MCP rows are not
 vectors but were run live against the device gateway, on all three heads.
 
+## Where this lives
+
+| | |
+|---|---|
+| Repository | https://github.com/muffy86/zen-agent — public |
+| CI | four jobs on every push (`node head`, `python head`, `kotlin head`, `the three heads must agree`) — all green |
+| Published package | `@muffy86/zen-agent@1.0.1` on GitHub Packages. **Currently private**: GitHub Packages sets package visibility per package, at publish time, and does not inherit a later change to the repository. Flip it once under the package's settings → Danger Zone → Change visibility |
+| Released assets | fat jar (`zen-agent-kotlin-core-1.0.0-all.jar`), python wheel/sdist, npm tarball, source bundle — built and checksummed under `../dist/zen-agent-1.0.0/` |
+| CI artifacts | every tag run uploads `zen-agent-python-dist` and `zen-agent-kotlin-jar` |
+
 ## What is verified, and how
 
 | Claim | Evidence |
@@ -46,6 +56,8 @@ vectors but were run live against the device gateway, on all three heads.
 | Zen usage is billed, not free | every measured call reported `billing_source: balance` — charged to Console credit (glm-5.3-flash $0.0000494, deepseek-v4.1-flash $0.000017, glm-5.3 $0.00014264) |
 | The MCP component reaches the device's real tool bus | all three heads list **19 device tools** (`/mcp` on 8802) and **23 browser tools** (8801), and each called `device_capabilities` successfully |
 | Artifacts install clean | wheel in a fresh venv: **32/32 vectors**; tarball in a fresh npm dir: works; fat jar: standalone |
+| The same gate passes in the cloud, and publishes | GitHub Actions: 4 jobs green on `main`, 5/5 on tag `v1.0.0`/`v1.0.1` including `publish packages` → `+ @muffy86/zen-agent@1.0.1` |
+| Real providers behind real keys | `clawrouter` (local), `opencode-zen` (Console key: glm-5.3-flash, measured $0.0000494/call), `groq` (openai/gpt-oss-120b), `ollama` (local) — each completes a live run in all three heads |
 
 ## Quickstart
 
