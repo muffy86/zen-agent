@@ -161,14 +161,24 @@ async function doctor(): Promise<number> {
   for (const p of registry.providers) {
     const url = p.kind === 'ollama-native' ? `${p.base_url}/api/tags` : `${p.base_url}/models`;
     let status = 'unreachable';
+    // a doctor that ignores the credentials on disk reports false failures: send them when present
+    const key = p.auth.key_env ? process.env[p.auth.key_env] : undefined;
+    const headers: Record<string, string> = {};
+    if (key) {
+      if (p.auth.style === 'bearer') headers.authorization = `Bearer ${key}`;
+      else if (p.auth.style === 'x-api-key') headers['x-api-key'] = key;
+      else if (p.auth.style === 'api-key') headers['api-key'] = key;
+      else headers.authorization = `Bearer ${key}`;
+      headers['user-agent'] = 'zen-agent/1.0';
+    }
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(6000) });
       status = String(res.status);
       if (res.ok) reachable++;
     } catch (err) {
       status = `error:${(err as Error).name}`;
     }
-    console.log(`${p.id.padEnd(16)} ${p.tier.padEnd(6)} ${status.padEnd(12)} ${url}`);
+    console.log(`${p.id.padEnd(16)} ${p.tier.padEnd(6)} ${status.padEnd(12)} ${key ? 'with key' : 'no key  '} ${url}`);
   }
   console.log(`\nreachable: ${reachable}/${registry.providers.length}`);
   return 0;

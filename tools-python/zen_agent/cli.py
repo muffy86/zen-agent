@@ -115,14 +115,27 @@ def doctor() -> int:
     reachable = 0
     for provider in registry["providers"]:
         url = f"{provider['base_url']}/api/tags" if provider["kind"] == "ollama-native" else f"{provider['base_url']}/models"
+        # a doctor that ignores the credentials on disk reports false failures: send them when present
+        key_env = provider["auth"].get("key_env")
+        key = os.environ.get(key_env) if key_env else None
+        headers = {"user-agent": "zen-agent/1.0"} if key else {}
+        if key:
+            style = provider["auth"].get("style")
+            if style == "x-api-key":
+                headers["x-api-key"] = key
+            elif style == "api-key":
+                headers["api-key"] = key
+            else:
+                headers["authorization"] = f"Bearer {key}"
+        request = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(url, timeout=4) as response:  # noqa: S310
+            with urllib.request.urlopen(request, timeout=6) as response:  # noqa: S310
                 status = str(response.status)
                 if response.status == 200:
                     reachable += 1
         except Exception as exc:
             status = f"error:{type(exc).__name__}"
-        print(f"{provider['id']:<16} {provider['tier']:<6} {status:<12} {url}")
+        print(f"{provider['id']:<16} {provider['tier']:<6} {status:<12} {'with key' if key else 'no key  '} {url}")
     print(f"\nreachable: {reachable}/{len(registry['providers'])}")
     return 0
 

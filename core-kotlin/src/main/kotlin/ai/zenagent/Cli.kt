@@ -143,15 +143,27 @@ private fun doctor(): Int {
     for (provider in providers) {
         val url = if (provider.kind == "ollama-native") "${provider.baseUrl}/api/tags" else "${provider.baseUrl}/models"
         var status = "unreachable"
+        // a doctor that ignores the credentials on disk reports false failures: send them when present
+        val key = DotEnv.get(provider.auth.keyEnv)
+        val builder = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(6))
+        if (key != null && key.isNotEmpty()) {
+            when (provider.auth.style) {
+                "x-api-key" -> builder.header("x-api-key", key)
+                "api-key" -> builder.header("api-key", key)
+                else -> builder.header("authorization", "Bearer $key")
+            }
+            builder.header("user-agent", "zen-agent/1.0")
+        }
         try {
-            val request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(4)).GET().build()
+            val request = builder.GET().build()
             val response = client.send(request, HttpResponse.BodyHandlers.discarding())
             status = response.statusCode().toString()
             if (response.statusCode() == 200) reachable++
         } catch (error: Exception) {
             status = "error:${error.javaClass.simpleName}"
         }
-        println("${provider.id.padEnd(16)} ${provider.tier.padEnd(6)} ${status.padEnd(12)} $url")
+        val keyNote = if (key.isNullOrEmpty()) "no key  " else "with key"
+        println("${provider.id.padEnd(16)} ${provider.tier.padEnd(6)} ${status.padEnd(12)} $keyNote $url")
     }
     println("\nreachable: $reachable/${providers.size}")
     return 0

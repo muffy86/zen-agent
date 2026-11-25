@@ -3,6 +3,7 @@ name: ci
 on:
   push:
     branches: ["**"]
+    tags: ["v*"]        # without this the publish job could never run: tags triggered nothing
   pull_request:
   workflow_dispatch:
 
@@ -63,6 +64,11 @@ jobs:
         run: ./gradlew --no-daemon build fatJar
       - name: conformance (kotlin)
         run: java -jar core-kotlin/build/libs/zen-agent-kotlin-core-1.0.0-all.jar conformance
+      - name: upload fat jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: zen-agent-kotlin-jar
+          path: core-kotlin/build/libs/*-all.jar
 
   differential:
     name: the three heads must agree
@@ -123,7 +129,5 @@ jobs:
           python -m build
       - uses: actions/upload-artifact@v4
         with:
-          name: zen-agent-dist
-          path: |
-            tools-python/dist/*
-            core-kotlin/build/libs/*-all.jar
+          name: zen-agent-python-dist
+          path: tools-python/dist/*   # the jar is uploaded by the kotlin job, where it is built
