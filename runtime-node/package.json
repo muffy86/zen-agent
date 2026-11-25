@@ -1,6 +1,6 @@
 {
   "name": "@muffy86/zen-agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Polyglot agentic runtime: one provider registry, one policy gate, three first-class implementations (TypeScript, Python, Kotlin) proven equal by shared golden vectors.",
   "type": "module",
   "license": "MIT",
